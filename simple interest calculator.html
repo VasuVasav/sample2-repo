@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Interest Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .calculator {
+      background: #fff;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0px 8px 25px rgba(0,0,0,0.15);
+      width: 380px;
+      transition: 0.3s;
+    }
+    .calculator:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 12px 30px rgba(0,0,0,0.2);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    label {
+      display: block;
+      margin: 8px 0 5px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: #007bff;
+      box-shadow: 0px 0px 6px rgba(0,123,255,0.5);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 12px;
+      background: #f0f9ff;
+      font-size: 16px;
+      color: #333;
+      border: 1px solid #cce7ff;
+    }
+    .section-title {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #444;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calculator">
+    <h2>💰 Smart Interest Calculator</h2>
+
+    <label>Principal Amount (₹)</label>
+    <input type="number" id="principal" placeholder="Enter principal">
+
+    <label>Rate of Interest (%)</label>
+    <input type="number" id="rate" placeholder="Enter annual rate">
+
+    <label>Time Duration</label>
+    <input type="number" id="years" placeholder="Years" min="0">
+    <input type="number" id="months" placeholder="Months" min="0" max="11">
+    <input type="number" id="days" placeholder="Days" min="0" max="365">
+
+    <label>Calculation Type</label>
+    <select id="calcType" onchange="toggleOptions()">
+      <option value="simple">Simple Interest</option>
+      <option value="compound">Compound Interest</option>
+      <option value="emi">EMI (Loan Calculator)</option>
+    </select>
+
+    <div id="compoundOptions" style="display:none;">
+      <label>Compounding Frequency</label>
+      <select id="frequency">
+        <option value="1">Yearly</option>
+        <option value="2">Half-Yearly</option>
+        <option value="4">Quarterly</option>
+        <option value="12">Monthly</option>
+      </select>
+    </div>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    function toggleOptions() {
+      let type = document.getElementById("calcType").value;
+      document.getElementById("compoundOptions").style.display =
+        type === "compound" ? "block" : "none";
+    }
+
+    function calculate() {
+      let principal = parseFloat(document.getElementById("principal").value);
+      let rate = parseFloat(document.getElementById("rate").value);
+      let years = parseInt(document.getElementById("years").value) || 0;
+      let months = parseInt(document.getElementById("months").value) || 0;
+      let days = parseInt(document.getElementById("days").value) || 0;
+      let type = document.getElementById("calcType").value;
+      let resultDiv = document.getElementById("result");
+
+      if (isNaN(principal) || isNaN(rate)) {
+        resultDiv.innerHTML = "⚠️ Please enter valid numbers!";
+        return;
+      }
+
+      // Convert time into years (approx)
+      let timeInYears = years + (months / 12) + (days / 365);
+
+      let interest, total, emi;
+
+      if (type === "simple") {
+        // Simple Interest
+        interest = (principal * rate * timeInYears) / 100;
+        total = principal + interest;
+        resultDiv.innerHTML = `
+          ✅ <b>Simple Interest Calculation</b><br>
+          📌 Interest: <b>₹${interest.toFixed(2)}</b><br>
+          💵 Total Amount: <b>₹${total.toFixed(2)}</b>
+        `;
+      } 
+      else if (type === "compound") {
+        // Compound Interest
+        let n = parseInt(document.getElementById("frequency").value);
+        total = principal * Math.pow((1 + (rate/100)/n), n*timeInYears);
+        interest = total - principal;
+        resultDiv.innerHTML = `
+          ✅ <b>Compound Interest Calculation</b><br>
+          📌 Interest: <b>₹${interest.toFixed(2)}</b><br>
+          💵 Total Amount: <b>₹${total.toFixed(2)}</b>
+        `;
+      }
+      else if (type === "emi") {
+        // EMI Calculator
+        let totalMonths = Math.round(timeInYears * 12);
+        let monthlyRate = rate / (12 * 100);
+        if (monthlyRate === 0) {
+          emi = principal / totalMonths;
+        } else {
+          emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / 
+                (Math.pow(1 + monthlyRate, totalMonths) - 1);
+        }
+        total = emi * totalMonths;
+        interest = total - principal;
+        resultDiv.innerHTML = `
+          ✅ <b>EMI (Loan) Calculation</b><br>
+          📌 Monthly EMI: <b>₹${emi.toFixed(2)}</b><br>
+          📌 Total Interest: <b>₹${interest.toFixed(2)}</b><br>
+          💵 Total Payment: <b>₹${total.toFixed(2)}</b>
+        `;
+      }
+    }
+  </script>
+
+</body>
+</html>
